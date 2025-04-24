@@ -22,16 +22,11 @@
     .nav-list a{color:#4caf50;font-weight:bold;text-decoration:none;font-size:0.95rem;}
     .nav-list a:hover{text-decoration:underline;}
 
-    /* ---------- Shared Visualization Block ---------- */
-    .viz-block{border:1px solid #ccc;background:#fff;padding:1rem;}
-    .viz-block img{max-width:100%;height:auto;display:block;margin:0.5rem 0;}
-    .viz-frame{width:100%;min-height:500px;border:0;}
-
-    /* ---------- Link List ---------- */
-    #visualization ul{list-style:none;padding-left:0;}
-    #visualization li{margin:0.6rem 0;}
-    #visualization a{color:#2c7be5;font-weight:bold;text-decoration:none;}
-    #visualization a:hover{text-decoration:underline;}
+    /* ---------- Visualization Block ---------- */
+    .viz-block{border:1px solid #ccc;background:#fff;padding:1rem;margin-top:1.5rem;}
+    .viz-block img{max-width:100%;height:auto;display:block;margin:0.7rem 0;}
+    .viz-link{color:#2c7be5;font-weight:bold;text-decoration:none;}
+    .viz-link:hover{text-decoration:underline;}
   </style>
 </head>
 
@@ -52,58 +47,76 @@
   </nav>
 
   <main>
-    <!-- Introductory text -->
+    <!-- 1. Introductory text -->
     <section id="project-description">
       <h2>Project Description</h2>
       <p>
         <strong>Green Impact SF</strong> is an interactive dashboard that explores how urban
-        green spaces affect environmental quality in San Francisco.  
-        Data processing is done with Python, while D3.js renders the choropleth map,
-        time-series chart, scatter-plot matrix, and heat map.
+        green spaces affect environmental quality in San Francisco.
+        Data processing is done with Python, and D3.js renders the final visuals.
       </p>
     </section>
 
-    <!-- Choropleth map and scatter-plot matrix links -->
+    <!-- 2. Choropleth Map & Scatter Plot Matrix -->
     <section id="visualization">
-      <h2>Interactive Map & Scatter Plot Matrix</h2>
-      <p>Click the links below to view the live visualizations on Vizhub.</p>
-      <ul>
-        <li>🌍 <a href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4" target="_blank">
-          Choropleth Map – Green Space Density</a></li>
-        <li>📊 <a href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147" target="_blank">
-          Scatter Plot Matrix – Green Space vs AQI vs Temperature</a></li>
-      </ul>
-    </section>
+      <h2>Choropleth Map & Scatter Plot Matrix</h2>
 
-    <!-- Time-series section -->
-    <section id="timeseries">
-      <h2>Time-Series Chart</h2>
+      <!-- 2-A. Choropleth Map block -->
       <div class="viz-block">
-        <!-- Placeholder image (replace with a real screenshot if desired) -->
-        <img src="placeholder-timeseries.png" alt="Preview of the time-series chart">
+        <!-- Text slot (description) -->
+        <p><strong>Choropleth Map – Green Space Density</strong></p>
 
-        <!-- Embedded interactive visualization -->
-        <iframe
-          class="viz-frame"
-          title="Time-Series Chart – Vizhub"
-          src="https://vizhub.com/Xhy51/da930104ac704b5db84f3379ac75b326">
-        </iframe>
+        <!-- Image slot (replace with real screenshot) -->
+        <img src="placeholder-choropleth.png" alt="Preview of the choropleth map">
+
+        <!-- Link slot (external interactive version) -->
+        <a class="viz-link"
+           href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4"
+           target="_blank">
+          View interactive map on Vizhub →
+        </a>
+      </div>
+
+      <!-- 2-B. Scatter Plot Matrix block -->
+      <div class="viz-block">
+        <!-- Text slot -->
+        <p><strong>Scatter Plot Matrix – Green Space vs AQI vs Temperature</strong></p>
+
+        <!-- Image slot -->
+        <img src="placeholder-scatter.png" alt="Preview of the scatter plot matrix">
+
+        <!-- Link slot -->
+        <a class="viz-link"
+           href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147"
+           target="_blank">
+          View interactive matrix on Vizhub →
+        </a>
       </div>
     </section>
 
-    <!-- Heat-map section -->
+    <!-- 3. Time-Series Chart -->
+    <section id="timeseries">
+      <h2>Time-Series Chart</h2>
+      <div class="viz-block">
+        <img src="placeholder-timeseries.png" alt="Preview of the time-series chart">
+        <a class="viz-link"
+           href="https://vizhub.com/Xhy51/da930104ac704b5db84f3379ac75b326"
+           target="_blank">
+          View interactive chart on Vizhub →
+        </a>
+      </div>
+    </section>
+
+    <!-- 4. Heat Map -->
     <section id="heatmap">
       <h2>Heat Map</h2>
       <div class="viz-block">
-        <!-- Placeholder image (replace with a real screenshot if desired) -->
         <img src="placeholder-heatmap.png" alt="Preview of the heat map">
-
-        <!-- Embedded interactive visualization -->
-        <iframe
-          class="viz-frame"
-          title="Heat Map – Vizhub"
-          src="https://vizhub.com/Xhy51/b40c50b6965e4ca18053726b3277af76">
-        </iframe>
+        <a class="viz-link"
+           href="https://vizhub.com/Xhy51/b40c50b6965e4ca18053726b3277af76"
+           target="_blank">
+          View interactive heat map on Vizhub →
+        </a>
       </div>
     </section>
   </main>
