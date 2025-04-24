@@ -36,11 +36,12 @@
     <p>by Martin Xu</p>
   </header>
 
-  <!-- Fixed navigation to jump between sections -->
+  <!-- Fixed navigation -->
   <nav>
     <ul class="nav-list">
       <li><a href="#project-description">Introduction</a></li>
-      <li><a href="#visualization">Map & Scatter</a></li>
+      <li><a href="#choropleth">Choropleth Map</a></li>
+      <li><a href="#scatter">Scatter Plot Matrix</a></li>
       <li><a href="#timeseries">Time-Series Chart</a></li>
       <li><a href="#heatmap">Heat Map</a></li>
     </ul>
@@ -57,35 +58,27 @@
       </p>
     </section>
 
-    <!-- 2. Choropleth Map & Scatter Plot Matrix -->
-    <section id="visualization">
-      <h2>Choropleth Map & Scatter Plot Matrix</h2>
-
-      <!-- 2-A. Choropleth Map block -->
+    <!-- 2. Choropleth Map -->
+    <section id="choropleth">
+      <h2>Choropleth Map</h2>
       <div class="viz-block">
-        <!-- Text slot (description) -->
-        <p><strong>Choropleth Map – Green Space Density</strong></p>
-
-        <!-- Image slot (replace with real screenshot) -->
-        <img src="placeholder-choropleth.png" alt="Preview of the choropleth map">
-
-        <!-- Link slot (external interactive version) -->
+        <!-- image: encode spaces (and the en-dash) with %20 / UTF-8 -->
+        <img src="Choropleth%20Map%20%E2%80%93%20Green%20Space%20Density.png"
+             alt="Preview of the choropleth map">
         <a class="viz-link"
            href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4"
            target="_blank">
           View interactive map on Vizhub →
         </a>
       </div>
+    </section>
 
-      <!-- 2-B. Scatter Plot Matrix block -->
+    <!-- 3. Scatter Plot Matrix -->
+    <section id="scatter">
+      <h2>Scatter Plot Matrix</h2>
       <div class="viz-block">
-        <!-- Text slot -->
-        <p><strong>Scatter Plot Matrix – Green Space vs AQI vs Temperature</strong></p>
-
-        <!-- Image slot -->
-        <img src="placeholder-scatter.png" alt="Preview of the scatter plot matrix">
-
-        <!-- Link slot -->
+        <img src="Scatter%20Plot%20Matrix%20%E2%80%93%20Green%20Space%20vs%20AQI%20vs%20Temperature.png"
+             alt="Preview of the scatter plot matrix">
         <a class="viz-link"
            href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147"
            target="_blank">
@@ -94,11 +87,11 @@
       </div>
     </section>
 
-    <!-- 3. Time-Series Chart -->
+    <!-- 4. Time-Series Chart -->
     <section id="timeseries">
       <h2>Time-Series Chart</h2>
       <div class="viz-block">
-        <img src="placeholder-timeseries.png" alt="Preview of the time-series chart">
+        <img src="Time-Series%20Chart.png" alt="Preview of the time-series chart">
         <a class="viz-link"
            href="https://vizhub.com/Xhy51/da930104ac704b5db84f3379ac75b326"
            target="_blank">
@@ -107,11 +100,11 @@
       </div>
     </section>
 
-    <!-- 4. Heat Map -->
+    <!-- 5. Heat Map -->
     <section id="heatmap">
       <h2>Heat Map</h2>
       <div class="viz-block">
-        <img src="placeholder-heatmap.png" alt="Preview of the heat map">
+        <img src="Heat%20Map.png" alt="Preview of the heat map">
         <a class="viz-link"
            href="https://vizhub.com/Xhy51/b40c50b6965e4ca18053726b3277af76"
            target="_blank">
@@ -122,8 +115,7 @@
   </main>
 
   <footer>
-    <p>
-      Source code:&nbsp;
+    <p>Source code:
       <a href="https://github.com/Xhy51/Data-Visualization-Final-project" target="_blank">
         Green Impact SF on GitHub
       </a>
