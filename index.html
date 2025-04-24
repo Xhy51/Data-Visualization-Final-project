@@ -4,86 +4,117 @@
   <meta charset="UTF-8">
   <title>Green Impact SF - Martin Xu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Link to D3.js library -->
+  <!-- Load D3.js v7 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
-    header {
-      background-color: #4CAF50;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    main {
-      margin: 2rem;
-    }
-    #visualization {
-      margin-top: 2rem;
-      border: 1px solid #ccc;
-      padding: 1rem;
-      background-color: white;
-      min-height: 400px;
-    }
-    #visualization ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
-    #visualization li {
-      margin: 10px 0;
-    }
-    #visualization a {
-      color: #2c7be5;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    #visualization a:hover {
-      text-decoration: underline;
-    }
-    footer {
-      text-align: center;
-      padding: 1rem;
-      margin-top: 2rem;
-      background-color: #eee;
-    }
+    /* ---------- Base Layout ---------- */
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f9f9f9;color:#333;}
+    header{background:#4caf50;color:#fff;padding:1.2rem 1rem;text-align:center;}
+    main{max-width:1000px;margin:2rem auto;padding:0 1rem;}
+    h1,h2{margin:0.4em 0;}
+    section{margin-top:3rem;}
+    footer{text-align:center;padding:1rem;background:#eee;margin-top:4rem;}
+
+    /* ---------- Top Navigation ---------- */
+    nav{background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.06);}
+    .nav-list{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin:0;padding:0.6rem 0;list-style:none;}
+    .nav-list a{color:#4caf50;font-weight:bold;text-decoration:none;font-size:0.95rem;}
+    .nav-list a:hover{text-decoration:underline;}
+
+    /* ---------- Shared Visualization Block ---------- */
+    .viz-block{border:1px solid #ccc;background:#fff;padding:1rem;}
+    .viz-block img{max-width:100%;height:auto;display:block;margin:0.5rem 0;}
+    .viz-frame{width:100%;min-height:500px;border:0;}
+
+    /* ---------- Link List ---------- */
+    #visualization ul{list-style:none;padding-left:0;}
+    #visualization li{margin:0.6rem 0;}
+    #visualization a{color:#2c7be5;font-weight:bold;text-decoration:none;}
+    #visualization a:hover{text-decoration:underline;}
   </style>
 </head>
+
 <body>
   <header>
     <h1>Green Impact SF</h1>
     <p>by Martin Xu</p>
   </header>
+
+  <!-- Fixed navigation to jump between sections -->
+  <nav>
+    <ul class="nav-list">
+      <li><a href="#project-description">Introduction</a></li>
+      <li><a href="#visualization">Map & Scatter</a></li>
+      <li><a href="#timeseries">Time-Series Chart</a></li>
+      <li><a href="#heatmap">Heat Map</a></li>
+    </ul>
+  </nav>
+
   <main>
+    <!-- Introductory text -->
     <section id="project-description">
       <h2>Project Description</h2>
       <p>
-        Green Impact SF is an interactive dashboard designed to analyze the impact of urban green spaces on environmental quality in San Francisco. The project utilizes various data visualization techniques, including an interactive choropleth map, time-series analysis charts, scatter plot matrices, and heat maps to provide comprehensive insights. Data processing is performed in Python while the visualizations are rendered using D3.js.
+        <strong>Green Impact SF</strong> is an interactive dashboard that explores how urban
+        green spaces affect environmental quality in San Francisco.  
+        Data processing is done with Python, while D3.js renders the choropleth map,
+        time-series chart, scatter-plot matrix, and heat map.
       </p>
     </section>
-    
+
+    <!-- Choropleth map and scatter-plot matrix links -->
     <section id="visualization">
-      <h2>Interactive Visualization</h2>
-      <p>The visualization area will display dynamic D3.js charts and maps.</p>
+      <h2>Interactive Map & Scatter Plot Matrix</h2>
+      <p>Click the links below to view the live visualizations on Vizhub.</p>
       <ul>
-        <li>
-          🌍 <a href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4" target="_blank">
-            Choropleth Map - Green Space Density in San Francisco
-          </a>
-        </li>
-        <li>
-          📊 <a href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147" target="_blank">
-            Scatter Plot Matrix - Green Space vs AQI vs Temperature
-          </a>
-        </li>
+        <li>🌍 <a href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4" target="_blank">
+          Choropleth Map – Green Space Density</a></li>
+        <li>📊 <a href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147" target="_blank">
+          Scatter Plot Matrix – Green Space vs AQI vs Temperature</a></li>
       </ul>
     </section>
+
+    <!-- Time-series section -->
+    <section id="timeseries">
+      <h2>Time-Series Chart</h2>
+      <div class="viz-block">
+        <!-- Placeholder image (replace with a real screenshot if desired) -->
+        <img src="placeholder-timeseries.png" alt="Preview of the time-series chart">
+
+        <!-- Embedded interactive visualization -->
+        <iframe
+          class="viz-frame"
+          title="Time-Series Chart – Vizhub"
+          src="https://vizhub.com/Xhy51/da930104ac704b5db84f3379ac75b326">
+        </iframe>
+      </div>
+    </section>
+
+    <!-- Heat-map section -->
+    <section id="heatmap">
+      <h2>Heat Map</h2>
+      <div class="viz-block">
+        <!-- Placeholder image (replace with a real screenshot if desired) -->
+        <img src="placeholder-heatmap.png" alt="Preview of the heat map">
+
+        <!-- Embedded interactive visualization -->
+        <iframe
+          class="viz-frame"
+          title="Heat Map – Vizhub"
+          src="https://vizhub.com/Xhy51/b40c50b6965e4ca18053726b3277af76">
+        </iframe>
+      </div>
+    </section>
   </main>
+
   <footer>
-    <p>Visit the project website: <a href="https://github.com/Xhy51/Data-Visualization-Final-project" target="_blank">Green Impact SF on GitHub</a></p>
+    <p>
+      Source code:&nbsp;
+      <a href="https://github.com/Xhy51/Data-Visualization-Final-project" target="_blank">
+        Green Impact SF on GitHub
+      </a>
+    </p>
   </footer>
 </body>
 </html>
