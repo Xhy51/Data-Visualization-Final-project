@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      Green Impact SF – Tree Canopy by Supervisor District
+    </title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+      .district {
+        stroke: #fff;
+        stroke-width: 0.7;
+      }
+      .tooltip {
+        position: absolute;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 6px 10px;
+        pointer-events: none;
+        font-size: 14px;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+
+  <body>
+    <h2>San Francisco Tree-Canopy Rate (2025)</h2>
+    <svg width="800" height="600"></svg>
+
+    <script>
+      const svg = d3.select('svg');
+      const { width, height } = svg
+        .node()
+        .getBoundingClientRect();
+
+      const projection = d3
+        .geoMercator()
+        .center([-122.4337, 37.7677])
+        .scale(100000)
+        .translate([width / 2, height / 2]);
+
+      const path = d3.geoPath().projection(projection);
+      const color = d3
+        .scaleSequential(d3.interpolateGreens)
+        .domain([0, 25]);
+
+      const tooltip = d3
+        .select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+
+      const geoURL =
+        'https://raw.githubusercontent.com/Xhy51/Data-Visualization-Final-project/refs/heads/main/SF_Supervisor_Districts_clean.geojson';
+      const csvURL = 'sf_district_greenrate_2025.csv'; // keep as-is
+
+      Promise.all([d3.csv(csvURL), d3.json(geoURL)]).then(
+        ([csv, geo]) => {
+          const rate = new Map(
+            csv.map((d) => [+d.District, +d.GreenRate_pct]),
+          );
+          color.domain([
+            0,
+            d3.max(csv, (d) => +d.GreenRate_pct),
+          ]);
+
+          svg
+            .selectAll('.district')
+            .data(geo.features)
+            .enter()
+            .append('path')
+            .attr('class', 'district')
+            .attr('d', path)
+            .attr('fill', (d) =>
+              color(rate.get(+d.properties.District) ?? 0),
+            )
+            .on('mouseover', (e, d) => {
+              const id = +d.properties.District;
+              const v = rate.get(id);
+              tooltip
+                .transition()
+                .duration(120)
+                .style('opacity', 0.95);
+              tooltip
+                .html(
+                  `<strong>District ${id}</strong><br/>Canopy ${v?.toFixed(2) ?? 'N/A'} %`,
+                )
+                .style('left', e.pageX + 12 + 'px')
+                .style('top', e.pageY - 28 + 'px');
+            })
+            .on('mousemove', (e) =>
+              tooltip
+                .style('left', e.pageX + 12 + 'px')
+                .style('top', e.pageY - 28 + 'px'),
+            )
+            .on('mouseout', () =>
+              tooltip
+                .transition()
+                .duration(200)
+                .style('opacity', 0),
+            );
+
+          // legend
+          const g = svg
+            .append('g')
+            .attr(
+              'transform',
+              `translate(${width - 140},${height - 220})`,
+            );
+          const scale = d3
+            .scaleLinear()
+            .domain(color.domain())
+            .range([0, 150]);
+          const axis = d3
+            .axisRight(scale)
+            .ticks(5)
+            .tickFormat((d) => d + '%');
+
+          const defs = svg.append('defs');
+          const grad = defs
+            .append('linearGradient')
+            .attr('id', 'lg')
+            .attr('x1', '0%')
+            .attr('y1', '0%')
+            .attr('x2', '0%')
+            .attr('y2', '100%');
+          grad
+            .selectAll('stop')
+            .data(d3.range(0, 1.01, 0.01))
+            .enter()
+            .append('stop')
+            .attr('offset', (d) => d * 100 + '%')
+            .attr('stop-color', (d) =>
+              color(scale.invert(d * 150)),
+            );
+
+          g.append('rect')
+            .attr('width', 15)
+            .attr('height', 150)
+            .style('fill', 'url(#lg)');
+          g.append('g')
+            .attr('transform', 'translate(15,0)')
+            .call(axis)
+            .selectAll('text')
+            .style('font-size', '11px');
+        },
+      );
+    </script>
+  </body>
+</html
