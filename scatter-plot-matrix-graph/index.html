@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Green Space vs AQI vs Temperature</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family:
+          'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 20px;
+        background: #f9f9f9;
+        color: #333;
+      }
+      h1 {
+        color: #2c3e50;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 8px;
+      }
+      #chart {
+        margin-top: 20px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+      .cell rect {
+        fill: none;
+        pointer-events: all;
+        stroke: #ccc;
+      }
+      circle {
+        fill-opacity: 0.7;
+      }
+      line.x,
+      line.y {
+        stroke: #e0e0e0;
+        stroke-width: 0.5;
+      }
+      text.x-label,
+      text.y-label {
+        fill: #666;
+        font-size: 10px;
+      }
+      text.x-title,
+      text.y-title {
+        fill: #333;
+        font-weight: 600;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>
+      Green Space vs AQI vs Temperature Scatterplot Matrix
+    </h1>
+    <div id="chart"></div>
+    <script src="main.js"></script>
+  </body>
+</html>
