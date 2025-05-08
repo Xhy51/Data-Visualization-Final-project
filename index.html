@@ -24,9 +24,6 @@
 
     /* ---------- Visualization Block ---------- */
     .viz-block{border:1px solid #ccc;background:#fff;padding:1rem;margin-top:1.5rem;}
-    .viz-block img{max-width:100%;height:auto;display:block;margin:0.7rem 0;}
-    .viz-link{color:#2c7be5;font-weight:bold;text-decoration:none;}
-    .viz-link:hover{text-decoration:underline;}
   </style>
 </head>
 
@@ -62,14 +59,10 @@
     <section id="choropleth">
       <h2>Choropleth Map</h2>
       <div class="viz-block">
-        <!-- image: encode spaces (and the en-dash) with %20 / UTF-8 -->
-        <img src="Choropleth%20Map%20%E2%80%93%20Green%20Space%20Density.png"
-             alt="Preview of the choropleth map">
-        <a class="viz-link"
-           href="https://vizhub.com/Xhy51/7dea6c2fbd0946feb82ac012bfd781c4"
-           target="_blank">
-          View interactive map on Vizhub →
-        </a>
+        <iframe
+          src="choropleth-map/index.html"
+          width="100%" height="600" frameborder="0">
+        </iframe>
       </div>
     </section>
 
@@ -77,13 +70,10 @@
     <section id="scatter">
       <h2>Scatter Plot Matrix</h2>
       <div class="viz-block">
-        <img src="Scatter%20Plot%20Matrix%20%E2%80%93%20Green%20Space%20vs%20AQI%20vs%20Temperature.png"
-             alt="Preview of the scatter plot matrix">
-        <a class="viz-link"
-           href="https://vizhub.com/Xhy51/75a047e5d3824849a35d75a8abf90147"
-           target="_blank">
-          View interactive matrix on Vizhub →
-        </a>
+        <iframe
+          src="scatter-plot-matrix-graph/index.html"
+          width="100%" height="600" frameborder="0">
+        </iframe>
       </div>
     </section>
 
@@ -91,12 +81,10 @@
     <section id="timeseries">
       <h2>Time-Series Chart</h2>
       <div class="viz-block">
-        <img src="Time-Series%20Chart.png" alt="Preview of the time-series chart">
-        <a class="viz-link"
-           href="https://vizhub.com/Xhy51/da930104ac704b5db84f3379ac75b326"
-           target="_blank">
-          View interactive chart on Vizhub →
-        </a>
+        <iframe
+          src="time-series-chart/index.html"
+          width="100%" height="600" frameborder="0">
+        </iframe>
       </div>
     </section>
 
@@ -104,12 +92,10 @@
     <section id="heatmap">
       <h2>Heat Map</h2>
       <div class="viz-block">
-        <img src="Heat%20Map.png" alt="Preview of the heat map">
-        <a class="viz-link"
-           href="https://vizhub.com/Xhy51/b40c50b6965e4ca18053726b3277af76"
-           target="_blank">
-          View interactive heat map on Vizhub →
-        </a>
+        <iframe
+          src="heatmap/index.html"
+          width="100%" height="600" frameborder="0">
+        </iframe>
       </div>
     </section>
   </main>
