@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SF Community-wide GHG – Time Series</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      svg {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+      .axis path,
+      .axis line {
+        stroke: #ccc;
+      }
+      .line {
+        fill: none;
+        stroke-width: 2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chart"></div>
+
+    <script>
+      const csvFile =
+        'San_Francisco_Communitywide_Greenhouse_Gas_Inventory_20250411.csv'; // local CSV
+
+      const svgW = 960,
+        svgH = 560,
+        m = { t: 40, r: 160, b: 50, l: 80 },
+        w = svgW - m.l - m.r,
+        h = svgH - m.t - m.b;
+
+      const svg = d3
+        .select('#chart')
+        .append('svg')
+        .attr('viewBox', [0, 0, svgW, svgH])
+        .append('g')
+        .attr('transform', `translate(${m.l},${m.t})`);
+
+      svg
+        .append('text') // title
+        .attr('x', w / 2)
+        .attr('y', -10)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '18px')
+        .text('SF Community-wide GHG by Sector');
+
+      d3.csv(csvFile, d3.autoType).then((raw) => {
+        // group emissions by sector & year
+        const series = d3
+          .rollups(
+            raw,
+            (v) => d3.sum(v, (d) => d.Emissions_mtCO2e),
+            (d) => d.Sector_General,
+            (d) => d.Calendar_Year,
+          )
+          .map(([sec, yrMap]) => ({
+            sec,
+            values: Array.from(yrMap, ([y, t]) => ({
+              y,
+              t,
+            })).sort((a, b) => a.y - b.y),
+          }));
+
+        const years = d3.extent(
+          raw,
+          (d) => d.Calendar_Year,
+        );
+        const maxVal = d3.max(
+          series.flatMap((s) => s.values),
+          (d) => d.t,
+        );
+
+        const x = d3
+          .scaleLinear()
+          .domain(years)
+          .range([0, w]);
+        const y = d3
+          .scaleLinear()
+          .domain([0, maxVal])
+          .nice()
+          .range([h, 0]);
+        const color = d3.scaleOrdinal(
+          series.map((s) => s.sec),
+          colorbrewer.Set2[8],
+        );
+
+        // axes
+        svg
+          .append('g')
+          .attr('class', 'axis')
+          .attr('transform', `translate(0,${h})`)
+          .call(
+            d3.axisBottom(x).tickFormat(d3.format('d')),
+          );
+        svg
+          .append('g')
+          .attr('class', 'axis')
+          .call(d3.axisLeft(y).tickFormat(d3.format('~s')));
+
+        // line generator
+        const line = d3
+          .line()
+          .x((d) => x(d.y))
+          .y((d) => y(d.t))
+          .curve(d3.curveMonotoneX);
+
+        // draw lines
+        svg
+          .selectAll('path.line')
+          .data(series)
+          .join('path')
+          .attr('class', 'line')
+          .attr('stroke', (d) => color(d.sec))
+          .attr('d', (d) => line(d.values));
+
+        // legend
+        const leg = svg
+          .append('g')
+          .attr('transform', `translate(${w + 20},20)`);
+        series.forEach((s, i) => {
+          const g = leg
+            .append('g')
+            .attr('transform', `translate(0,${i * 18})`);
+          g.append('rect')
+            .attr('width', 14)
+            .attr('height', 14)
+            .attr('fill', color(s.sec));
+          g.append('text')
+            .attr('x', 20)
+            .attr('y', 11)
+            .text(s.sec)
+            .style('font-size', '12px');
+        });
+      });
+    </script>
+  </body>
+</html

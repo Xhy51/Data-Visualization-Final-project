@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      SF Municipal GHG – Year × Commodity Heat-Map
+    </title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      svg {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+      .axis text {
+        font-size: 11px;
+      }
+      .axis path,
+      .axis line {
+        stroke: #ccc;
+      }
+      .chart-title {
+        font-size: 18px;
+        font-weight: bold;
+        text-anchor: middle;
+      }
+      /* Tooltip styling */
+      .tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        padding: 6px 8px;
+        border-radius: 4px;
+        pointer-events: none;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chart"></div>
+
+    <script>
+      // --- CONFIG ---
+      const csvFile =
+        'San_Francisco_Municipal_Greenhouse_Gas_Inventory_20250411_2020-2022.csv';
+      const W = 960,
+        H = 600;
+      const margin = {
+        top: 80,
+        right: 20,
+        bottom: 60,
+        left: 160,
+      };
+      const w = W - margin.left - margin.right;
+      const h = H - margin.top - margin.bottom;
+
+      // Create SVG and group container
+      const svg = d3
+        .select('#chart')
+        .append('svg')
+        .attr('viewBox', `0 0 ${W} ${H}`);
+
+      // Chart title
+      svg
+        .append('text')
+        .attr('class', 'chart-title')
+        .attr('x', W / 2)
+        .attr('y', margin.top / 2)
+        .text(
+          'SF Municipal GHG by Commodity Info (2020–2022)',
+        );
+
+      const g = svg
+        .append('g')
+        .attr(
+          'transform',
+          `translate(${margin.left},${margin.top})`,
+        );
+
+      // Tooltip div (hidden at start)
+      const tooltip = d3
+        .select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+
+      // --- DATA LOADING & PROCESSING ---
+      d3.csv(csvFile, d3.autoType)
+        .then((raw) => {
+          // 1) Filter to Fiscal Year 2020–2022
+          const filtered = raw.filter(
+            (d) =>
+              d['Fiscal Year'] >= 2020 &&
+              d['Fiscal Year'] <= 2022,
+          );
+
+          // 2) Roll up by Commodity Info × Fiscal Year
+          const flat = [];
+          d3.rollups(
+            filtered,
+            (v) => d3.sum(v, (d) => d['Emissions mtCO2e']),
+            (d) => d['Commodity Info'],
+            (d) => d['Fiscal Year'],
+          ).forEach(([commodity, yearMap]) => {
+            yearMap.forEach(([yr, val]) => {
+              flat.push({
+                commodity,
+                year: yr,
+                value: val,
+              });
+            });
+          });
+
+          // 3) Unique sorted lists of years & commodities
+          const years = Array.from(
+            new Set(flat.map((d) => d.year)),
+          ).sort(d3.ascending);
+          const commodities = Array.from(
+            new Set(flat.map((d) => d.commodity)),
+          ).sort(d3.ascending);
+
+          // 4) Scales
+          const x = d3
+            .scaleBand()
+            .domain(years)
+            .range([0, w])
+            .padding(0.05);
+
+          const y = d3
+            .scaleBand()
+            .domain(commodities)
+            .range([0, h])
+            .padding(0.05);
+
+          const maxVal = d3.max(flat, (d) => d.value);
+          const color = d3.scaleSequential(
+            [0, maxVal],
+            d3.interpolateOrRd,
+          );
+
+          // --- DRAW CELLS ---
+          g.append('g')
+            .selectAll('rect')
+            .data(flat)
+            .join('rect')
+            .attr('x', (d) => x(d.year))
+            .attr('y', (d) => y(d.commodity))
+            .attr('width', x.bandwidth())
+            .attr('height', y.bandwidth())
+            .attr('fill', (d) => color(d.value))
+            .on('mouseover', (event, d) => {
+              tooltip.style('opacity', 1).html(
+                `<strong>Commodity:</strong> ${d.commodity}<br/>
+               <strong>Year:</strong> ${d.year}<br/>
+               <strong>Emissions:</strong> ${d3.format(',.0f')(d.value)} mtCO₂e`,
+              );
+            })
+            .on('mousemove', (event) => {
+              tooltip
+                .style('left', event.pageX + 10 + 'px')
+                .style('top', event.pageY + 10 + 'px');
+            })
+            .on('mouseout', () => {
+              tooltip.style('opacity', 0);
+            });
+
+          // --- AXES ---
+          // X axis (years)
+          g.append('g')
+            .attr('class', 'axis')
+            .attr('transform', `translate(0,${h})`)
+            .call(d3.axisBottom(x).tickSize(0))
+            .selectAll('text')
+            .attr('dy', 12);
+
+          // Y axis (commodities)
+          g.append('g')
+            .attr('class', 'axis')
+            .call(d3.axisLeft(y).tickSize(0));
+
+          // --- LEGEND (gradient bar) ---
+          const legendW = 200,
+            legendH = 10;
+          const lg = g
+            .append('g')
+            .attr(
+              'transform',
+              `translate(${w - legendW},${-40})`,
+            );
+
+          // Legend scale
+          const lgScale = d3
+            .scaleLinear()
+            .domain([0, maxVal])
+            .range([0, legendW]);
+
+          // Legend axis
+          lg.append('g')
+            .attr('transform', `translate(0,${legendH})`)
+            .call(
+              d3
+                .axisBottom(lgScale)
+                .ticks(5, '~s')
+                .tickSize(legendH),
+            )
+            .select('.domain')
+            .remove();
+
+          // Gradient definition
+          const gradId = 'legend-grad';
+          const defs = svg.append('defs');
+          const grad = defs
+            .append('linearGradient')
+            .attr('id', gradId)
+            .attr('x1', '0%')
+            .attr('x2', '100%')
+            .attr('y1', '0%')
+            .attr('y2', '0%');
+
+          grad
+            .selectAll('stop')
+            .data(d3.ticks(0, maxVal, 10))
+            .join('stop')
+            .attr('offset', (d) => `${(d / maxVal) * 100}%`)
+            .attr('stop-color', (d) => color(d));
+
+          // Draw gradient rect
+          lg.append('rect')
+            .attr('width', legendW)
+            .attr('height', legendH)
+            .style('fill', `url(#${gradId})`);
+        })
+        .catch((err) => {
+          console.error(
+            'Failed to load or process data:',
+            err,
+          );
+        });
+    </script>
+  </body
