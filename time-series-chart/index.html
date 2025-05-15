@@ -2,42 +2,79 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>SF Community-wide Green House Gas – Time Series</title>
+    <title>
+      SF Community-wide Green House Gas – Time Series
+    </title>
+
+    <!-- ──────────────────────────────────────────────────────
+         Libraries
+         - d3.v7      : main D3 library
+         - colorbrewer: nice categorical colour palettes
+         - d3-annotation (optional): handy for adding call-outs
+       ────────────────────────────────────────────────────── -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
+    <script src="https://unpkg.com/d3-svg-annotation@2.5.1/d3-annotation.min.js"></script>
+
     <style>
+      /* Basic page reset */
       body {
         margin: 0;
         font-family: sans-serif;
       }
+
+      /* Make the SVG fill the full viewport height */
       svg {
         width: 100%;
         height: 100vh;
         display: block;
       }
+
+      /* Light-grey axes */
       .axis path,
       .axis line {
         stroke: #ccc;
       }
+
+      /* Line style for each sector */
       .line {
         fill: none;
         stroke-width: 2;
       }
+
+      /* Tooltip look-and-feel */
+      .tooltip {
+        position: absolute;
+        pointer-events: none; /* avoid mouse capture */
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1.3em;
+      }
     </style>
   </head>
+
   <body>
+    <!-- Container for the chart -->
     <div id="chart"></div>
 
     <script>
+      /* ----------------------------- CONFIG ----------------------------- */
+      // Local CSV file (exported earlier from SF Open Data)
       const csvFile =
-        'San_Francisco_Communitywide_Greenhouse_Gas_Inventory_20250411.csv'; // local CSV
+        'San_Francisco_Communitywide_Greenhouse_Gas_Inventory_20250411.csv';
 
+      // Overall dimensions + margins
       const svgW = 960,
         svgH = 560,
         m = { t: 40, r: 160, b: 50, l: 80 },
         w = svgW - m.l - m.r,
         h = svgH - m.t - m.b;
 
+      /* ------------------------- BASE SVG LAYER ------------------------- */
+      // Attach an SVG and a translated <g> for the inner drawing area
       const svg = d3
         .select('#chart')
         .append('svg')
@@ -45,16 +82,27 @@
         .append('g')
         .attr('transform', `translate(${m.l},${m.t})`);
 
+      // Chart title
       svg
-        .append('text') // title
+        .append('text')
         .attr('x', w / 2)
         .attr('y', -10)
         .attr('text-anchor', 'middle')
         .style('font-size', '18px')
-        .text('SF Community-wide Green House Gas by Sector');
+        .text(
+          'SF Community-wide Green House Gas by Sector',
+        );
 
+      /* ----------------------------- TOOLTIP ---------------------------- */
+      const tooltip = d3
+        .select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0); // start hidden
+
+      /* --------------------------- DATA LOADING -------------------------- */
       d3.csv(csvFile, d3.autoType).then((raw) => {
-        // group emissions by sector & year
+        /* Group by Sector_General and Calendar_Year, then sum emissions */
         const series = d3
           .rollups(
             raw,
@@ -70,6 +118,7 @@
             })).sort((a, b) => a.y - b.y),
           }));
 
+        /* --------------------------- SCALES --------------------------- */
         const years = d3.extent(
           raw,
           (d) => d.Calendar_Year,
@@ -90,30 +139,31 @@
           .range([h, 0]);
         const color = d3.scaleOrdinal(
           series.map((s) => s.sec),
-          colorbrewer.Set2[8],
+          colorbrewer.Set2[8], // palette with 8 pleasant colours
         );
 
-        // axes
+        /* ----------------------------- AXES ----------------------------- */
         svg
           .append('g')
           .attr('class', 'axis')
           .attr('transform', `translate(0,${h})`)
           .call(
             d3.axisBottom(x).tickFormat(d3.format('d')),
-          );
+          ); // integer years
+
         svg
           .append('g')
           .attr('class', 'axis')
-          .call(d3.axisLeft(y).tickFormat(d3.format('~s')));
+          .call(d3.axisLeft(y).tickFormat(d3.format('~s'))); // 1k, 10k etc.
 
-        // line generator
+        /* ---------------------- LINE GENERATOR ------------------------- */
         const line = d3
           .line()
           .x((d) => x(d.y))
           .y((d) => y(d.t))
-          .curve(d3.curveMonotoneX);
+          .curve(d3.curveMonotoneX); // smooth but not too curvy
 
-        // draw lines
+        /* ------------------------- DRAW LINES -------------------------- */
         svg
           .selectAll('path.line')
           .data(series)
@@ -122,25 +172,47 @@
           .attr('stroke', (d) => color(d.sec))
           .attr('d', (d) => line(d.values));
 
-        // legend
-        const leg = svg
-          .append('g')
-          .attr('transform', `translate(${w + 20},20)`);
-        series.forEach((s, i) => {
-          const g = leg
-            .append('g')
-            .attr('transform', `translate(0,${i * 18})`);
-          g.append('rect')
-            .attr('width', 14)
-            .attr('height', 14)
-            .attr('fill', color(s.sec));
-          g.append('text')
-            .attr('x', 20)
-            .attr('y', 11)
-            .text(s.sec)
-            .style('font-size', '12px');
-        });
+        /* ------------- INTERACTIVE POINTS FOR TOOLTIP ------------------ */
+        svg
+          .selectAll('g.points')
+          .data(series)
+          .join('g')
+          .attr('class', 'points')
+          .attr('fill', (d) => color(d.sec))
+          .selectAll('circle')
+          .data((d) =>
+            d.values.map((v) => ({ ...v, sec: d.sec })),
+          )
+          .join('circle')
+          .attr('cx', (d) => x(d.y))
+          .attr('cy', (d) => y(d.t))
+          .attr('r', 4)
+          .attr('opacity', 0) // keep circles invisible until hover
+          .on('mouseover', function (event, d) {
+            // Highlight point under cursor
+            d3.select(this).attr('opacity', 1);
+
+            // Populate and display tooltip
+            tooltip
+              .style('opacity', 1)
+              .html(
+                `<strong>${d.sec}</strong><br>Year: ${d.y}<br>Emissions: ${d3.format(
+                  ',.0f',
+                )(d.t)} t CO₂e`,
+              );
+          })
+          .on('mousemove', function (event) {
+            // Move tooltip with cursor (with a small offset)
+            tooltip
+              .style('left', event.pageX + 12 + 'px')
+              .style('top', event.pageY - 28 + 'px');
+          })
+          .on('mouseout', function () {
+            // Return point to invisible + hide tooltip
+            d3.select(this).attr('opacity', 0);
+            tooltip.style('opacity', 0);
+          });
       });
     </script>
   </body>
-</html
+</html>
