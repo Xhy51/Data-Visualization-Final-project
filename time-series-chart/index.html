@@ -2,15 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>
-      SF Community-wide Green House Gas – Time Series
-    </title>
+    <title>SF Community-wide Green House Gas – Time Series</title>
 
     <!-- ──────────────────────────────────────────────────────
          Libraries
-         - d3.v7      : main D3 library
-         - colorbrewer: nice categorical colour palettes
-         - d3-annotation (optional): handy for adding call-outs
        ────────────────────────────────────────────────────── -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
@@ -62,11 +57,9 @@
 
     <script>
       /* ----------------------------- CONFIG ----------------------------- */
-      // Local CSV file (exported earlier from SF Open Data)
       const csvFile =
         'San_Francisco_Communitywide_Greenhouse_Gas_Inventory_20250411.csv';
 
-      // Overall dimensions + margins
       const svgW = 960,
         svgH = 560,
         m = { t: 40, r: 160, b: 50, l: 80 },
@@ -74,7 +67,6 @@
         h = svgH - m.t - m.b;
 
       /* ------------------------- BASE SVG LAYER ------------------------- */
-      // Attach an SVG and a translated <g> for the inner drawing area
       const svg = d3
         .select('#chart')
         .append('svg')
@@ -82,16 +74,13 @@
         .append('g')
         .attr('transform', `translate(${m.l},${m.t})`);
 
-      // Chart title
       svg
         .append('text')
         .attr('x', w / 2)
         .attr('y', -10)
         .attr('text-anchor', 'middle')
         .style('font-size', '18px')
-        .text(
-          'SF Community-wide Green House Gas by Sector',
-        );
+        .text('SF Community-wide Green House Gas by Sector');
 
       /* ----------------------------- TOOLTIP ---------------------------- */
       const tooltip = d3
@@ -112,26 +101,19 @@
           )
           .map(([sec, yrMap]) => ({
             sec,
-            values: Array.from(yrMap, ([y, t]) => ({
-              y,
-              t,
-            })).sort((a, b) => a.y - b.y),
+            values: Array.from(yrMap, ([y, t]) => ({ y, t })).sort(
+              (a, b) => a.y - b.y,
+            ),
           }));
 
         /* --------------------------- SCALES --------------------------- */
-        const years = d3.extent(
-          raw,
-          (d) => d.Calendar_Year,
-        );
+        const years = d3.extent(raw, (d) => d.Calendar_Year);
         const maxVal = d3.max(
           series.flatMap((s) => s.values),
           (d) => d.t,
         );
 
-        const x = d3
-          .scaleLinear()
-          .domain(years)
-          .range([0, w]);
+        const x = d3.scaleLinear().domain(years).range([0, w]);
         const y = d3
           .scaleLinear()
           .domain([0, maxVal])
@@ -139,7 +121,7 @@
           .range([h, 0]);
         const color = d3.scaleOrdinal(
           series.map((s) => s.sec),
-          colorbrewer.Set2[8], // palette with 8 pleasant colours
+          colorbrewer.Set2[8],
         );
 
         /* ----------------------------- AXES ----------------------------- */
@@ -147,21 +129,19 @@
           .append('g')
           .attr('class', 'axis')
           .attr('transform', `translate(0,${h})`)
-          .call(
-            d3.axisBottom(x).tickFormat(d3.format('d')),
-          ); // integer years
+          .call(d3.axisBottom(x).tickFormat(d3.format('d')));
 
         svg
           .append('g')
           .attr('class', 'axis')
-          .call(d3.axisLeft(y).tickFormat(d3.format('~s'))); // 1k, 10k etc.
+          .call(d3.axisLeft(y).tickFormat(d3.format('~s')));
 
         /* ---------------------- LINE GENERATOR ------------------------- */
         const line = d3
           .line()
           .x((d) => x(d.y))
           .y((d) => y(d.t))
-          .curve(d3.curveMonotoneX); // smooth but not too curvy
+          .curve(d3.curveMonotoneX);
 
         /* ------------------------- DRAW LINES -------------------------- */
         svg
@@ -172,6 +152,31 @@
           .attr('stroke', (d) => color(d.sec))
           .attr('d', (d) => line(d.values));
 
+        /* ========================= LEGEND ========================= */
+        const legendG = svg
+          .append('g')
+          .attr('class', 'legend')
+          .attr('transform', `translate(${w + 24}, 0)`); // inside right margin
+
+        const legendRow = legendG
+          .selectAll('g')
+          .data(series)
+          .join('g')
+          .attr('transform', (_, i) => `translate(0, ${i * 22})`);
+
+        legendRow
+          .append('rect')
+          .attr('width', 14)
+          .attr('height', 14)
+          .attr('fill', (d) => color(d.sec));
+
+        legendRow
+          .append('text')
+          .attr('x', 20)
+          .attr('y', 11)
+          .attr('font-size', 12)
+          .text((d) => d.sec);
+
         /* ------------- INTERACTIVE POINTS FOR TOOLTIP ------------------ */
         svg
           .selectAll('g.points')
@@ -180,19 +185,14 @@
           .attr('class', 'points')
           .attr('fill', (d) => color(d.sec))
           .selectAll('circle')
-          .data((d) =>
-            d.values.map((v) => ({ ...v, sec: d.sec })),
-          )
+          .data((d) => d.values.map((v) => ({ ...v, sec: d.sec })))
           .join('circle')
           .attr('cx', (d) => x(d.y))
           .attr('cy', (d) => y(d.t))
           .attr('r', 4)
-          .attr('opacity', 0) // keep circles invisible until hover
+          .attr('opacity', 0)
           .on('mouseover', function (event, d) {
-            // Highlight point under cursor
             d3.select(this).attr('opacity', 1);
-
-            // Populate and display tooltip
             tooltip
               .style('opacity', 1)
               .html(
@@ -202,13 +202,11 @@
               );
           })
           .on('mousemove', function (event) {
-            // Move tooltip with cursor (with a small offset)
             tooltip
               .style('left', event.pageX + 12 + 'px')
               .style('top', event.pageY - 28 + 'px');
           })
           .on('mouseout', function () {
-            // Return point to invisible + hide tooltip
             d3.select(this).attr('opacity', 0);
             tooltip.style('opacity', 0);
           });
