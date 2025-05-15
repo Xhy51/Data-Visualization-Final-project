@@ -6,9 +6,15 @@
       name="viewport"
       content="width=device-width,initial-scale=1.0"
     />
-    <title>Green Impact SF – AQI vs Temp vs Emissions</title>
+    <title>
+      Green Impact SF – AQI vs Temp vs Emissions
+    </title>
+
+    <!-- D3 (v7) for everything -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <style>
+      /* ──────────────── Page layout & colours ──────────────── */
       body {
         font-family:
           'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,11 +28,10 @@
         padding-bottom: 8px;
       }
 
-      /* flex container to hold chart + legend */
+      /* flex box: SVG (matrix) on the left, legend on the right */
       #container {
         display: flex;
       }
-
       #chart {
         margin-top: 20px;
         background: #fff;
@@ -34,8 +39,6 @@
         border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
-
-      /* legend on the right */
       #legend {
         margin-left: 30px;
         margin-top: 40px;
@@ -53,6 +56,7 @@
         border-radius: 2px;
       }
 
+      /* scatterplot‐matrix cell & axes */
       .cell rect {
         fill: none;
         stroke: #ccc;
@@ -70,7 +74,7 @@
         font-size: 8px;
       }
 
-      /* tooltip styling */
+      /* Tooltip bubble */
       .tooltip {
         position: absolute;
         background: rgba(0, 0, 0, 0.75);
@@ -83,6 +87,7 @@
       }
     </style>
   </head>
+
   <body>
     <h1>AQI vs Temperature vs Emissions (2020–2022)</h1>
 
@@ -92,99 +97,105 @@
     </div>
 
     <script>
+      /* Load both datasets in parallel */
       Promise.all([
-        // load daily AQI & temperature
+        // Daily air-quality + temperature (2020-2024)
         d3.csv('sf_aqi_temp_2020_2024.csv', d3.autoType),
-        // load annual municipal emissions for 2020–2022
+        // Annual municipal GHG emissions (2020-2022 only needed)
         d3.csv(
           'San_Francisco_Municipal_Greenhouse_Gas_Inventory_20250411_2020-2022.csv',
-          d3.autoType
+          d3.autoType,
         ),
       ])
         .then(([at, ghg]) => {
-          // create tooltip div (hidden by default)
+          /* ───────────── Tooltip container ───────────── */
           const tooltip = d3
             .select('body')
             .append('div')
             .attr('class', 'tooltip')
             .style('opacity', 0);
 
-          // 1) Aggregate total emissions by Fiscal Year (2020–2022)
+          /* 1) Sum total emissions per fiscal year (2020-2022) */
           const emissionsByYear = d3.rollup(
             ghg.filter(
               (d) =>
                 d['Fiscal Year'] >= 2020 &&
-                d['Fiscal Year'] <= 2022
+                d['Fiscal Year'] <= 2022,
             ),
             (v) => d3.sum(v, (d) => +d['Emissions mtCO2e']),
-            (d) => d['Fiscal Year']
+            (d) => d['Fiscal Year'],
           );
 
-          // 2) Parse dates & filter daily data to 2020–2022
+          /* 2) Parse date strings and keep only 2020-2022 daily rows */
           at.forEach((d) => {
-            d.Date = d3.isoParse(d.Date); // ISO → Date
+            d.Date = d3.isoParse(d.Date);
           });
-          const filteredDaily = at.filter((d) => {
-            return (
+          const filteredDaily = at.filter(
+            (d) =>
               d.Date instanceof Date &&
               !isNaN(d.Date) &&
               d.Date.getFullYear() >= 2020 &&
-              d.Date.getFullYear() <= 2022
-            );
-          });
+              d.Date.getFullYear() <= 2022,
+          );
 
-          // 3) Attach annual emissions, drop invalid
+          /* 3) Attach annual emissions to each day; drop days w/o match */
           const data = filteredDaily
             .map((d) => {
-              const year = d.Date.getFullYear();
+              const yr = d.Date.getFullYear();
               return {
                 AQI: d.AQI,
                 Temp_C: d.Temp_C,
-                year: year,
-                emissions: emissionsByYear.get(year),
+                year: yr,
+                emissions: emissionsByYear.get(yr),
               };
             })
-            .filter((d) => d.emissions != null);
+            .filter((d) => d.emissions != null); // guard against missing years
 
-          // 4) Setup traits, color scale, sizes
-          const traits = ['AQI', 'Temp_C', 'emissions'];
-          const groupField = 'year';
-          const years = Array.from(new Set(data.map((d) => d.year)));
+          /* ───────────── Set-up: traits, scales, colours ───────────── */
+          const traits = ['AQI', 'Temp_C', 'emissions']; // matrix axes
+          const years = Array.from(
+            new Set(data.map((d) => d.year)),
+          );
           const size = 180,
             padding = 40;
+
           const color = d3
             .scaleOrdinal()
             .domain(years)
             .range(d3.schemeCategory10);
 
-          // 5) Build x/y scales
+          /* Separate x/y scale per trait so axes are independent */
           const xScale = {},
             yScale = {};
           traits.forEach((tr) => {
-            const ext = d3.extent(data, (d) => d[tr]);
+            const extent = d3.extent(data, (d) => d[tr]);
             xScale[tr] = d3
               .scaleLinear()
-              .domain(ext)
+              .domain(extent)
               .nice()
               .range([padding / 2, size - padding / 2]);
             yScale[tr] = d3
               .scaleLinear()
-              .domain(ext)
+              .domain(extent)
               .nice()
-              .range([size - padding / 2, padding / 2]);
+              .range([size - padding / 2, padding / 2]); // inverted for y
           });
 
-          // 6) Draw matrix
+          /* ───────────── SVG container for matrix ───────────── */
           const svg = d3
             .select('#chart')
             .append('svg')
             .attr('width', size * traits.length)
             .attr('height', size * traits.length);
 
+          /* Helper to create trait-pair combinations (Cartesian product) */
           function cross(a, b) {
-            return a.flatMap((x) => b.map((y) => ({ x, y })));
+            return a.flatMap((x) =>
+              b.map((y) => ({ x, y })),
+            );
           }
 
+          /* ───────────── Draw each scatter-plot cell ───────────── */
           svg
             .selectAll('g.cell')
             .data(cross(traits, traits))
@@ -196,9 +207,10 @@
               return `translate(${i * size},${j * size})`;
             })
             .each(function (d) {
+              /* `this` is the <g> for one cell */
               const cell = d3.select(this);
 
-              // draw cell frame
+              /* Cell frame (neat grey box) */
               cell
                 .append('rect')
                 .attr('x', padding / 2)
@@ -207,7 +219,7 @@
                 .attr('height', size - padding)
                 .attr('stroke', '#ccc');
 
-              // draw points with tooltip events
+              /* Scatter dots */
               cell
                 .selectAll('circle')
                 .data(data)
@@ -215,63 +227,109 @@
                 .attr('cx', (p) => xScale[d.x](p[d.x]))
                 .attr('cy', (p) => yScale[d.y](p[d.y]))
                 .attr('r', 3.5)
-                .attr('fill', (p) => color(p[groupField]))
+                .attr('fill', (p) => color(p.year))
                 .attr('stroke', (p) =>
-                  d3.color(color(p[groupField])).darker(0.5)
+                  d3.color(color(p.year)).darker(0.5),
                 )
                 .attr('stroke-width', 0.5)
                 .on('mouseover', (event, p) => {
-                  tooltip
-                    .style('opacity', 1)
-                    .html(
-                      `Year: ${p.year}<br/>
+                  tooltip.style('opacity', 1).html(
+                    `Year: ${p.year}<br/>
                        AQI: ${p.AQI.toFixed(1)}<br/>
-                       Temp: ${p.Temp_C.toFixed(1)}°C<br/>
-                       Emissions: ${d3.format('.2s')(p.emissions)}`
-                    );
+                       Temp: ${p.Temp_C.toFixed(1)} °C<br/>
+                       Emissions: ${d3.format('.2s')(p.emissions)}`,
+                  );
                 })
                 .on('mousemove', (event) => {
                   tooltip
                     .style('left', event.pageX + 10 + 'px')
                     .style('top', event.pageY + 10 + 'px');
                 })
-                .on('mouseout', () => {
-                  tooltip.style('opacity', 0);
-                });
+                .on('mouseout', () =>
+                  tooltip.style('opacity', 0),
+                );
 
-              // x-axis (bottom row)
-              if (traits.indexOf(d.y) === traits.length - 1) {
-                let axis = d3.axisBottom(xScale[d.x]).ticks(5);
-                if (d.x === 'emissions') axis.tickFormat(d3.format('.2s'));
+              /* Bottom-row x-axis */
+              if (
+                traits.indexOf(d.y) ===
+                traits.length - 1
+              ) {
+                let axis = d3
+                  .axisBottom(xScale[d.x])
+                  .ticks(5);
+                if (d.x === 'emissions')
+                  axis.tickFormat(d3.format('.2s'));
                 cell
                   .append('g')
                   .attr('class', 'axis')
                   .attr(
                     'transform',
-                    `translate(0,${size - padding / 2})`
+                    `translate(0,${size - padding / 2})`,
                   )
                   .call(axis);
               }
 
-              // y-axis (first column)
+              /* First-column y-axis */
               if (traits.indexOf(d.x) === 0) {
-                let axis = d3.axisLeft(yScale[d.y]).ticks(5);
-                if (d.y === 'emissions') axis.tickFormat(d3.format('.2s'));
+                let axis = d3
+                  .axisLeft(yScale[d.y])
+                  .ticks(5);
+                if (d.y === 'emissions')
+                  axis.tickFormat(d3.format('.2s'));
                 cell
                   .append('g')
                   .attr('class', 'axis')
                   .attr(
                     'transform',
-                    `translate(${padding / 2},0)`
+                    `translate(${padding / 2},0)`,
                   )
                   .call(axis);
               }
             });
 
-          // 7) Draw color legend on the right
+          /* ───────────── Axis labels (column & row headers) ───────────── */
+          const niceName = (t) =>
+            t === 'Temp_C'
+              ? 'Temperature (°C)'
+              : t === 'AQI'
+                ? 'AQI'
+                : 'Emissions';
+
+          /* Column labels (top) */
+          svg
+            .selectAll('.col-label')
+            .data(traits)
+            .enter()
+            .append('text')
+            .attr('class', 'col-label')
+            .attr('x', (d, i) => i * size + size / 2)
+            .attr('y', 12)
+            .attr('text-anchor', 'middle')
+            .attr('font-weight', 'bold')
+            .attr('font-size', 11)
+            .text(niceName);
+
+          /* Row labels (left) */
+          svg
+            .selectAll('.row-label')
+            .data(traits)
+            .enter()
+            .append('text')
+            .attr('class', 'row-label')
+            .attr('x', padding / 2)
+            .attr('y', (d, i) => i * size + size / 2)
+            .attr('text-anchor', 'end')
+            .attr('dominant-baseline', 'middle')
+            .attr('font-weight', 'bold')
+            .attr('font-size', 11)
+            .text(niceName);
+
+          /* ───────────── Simple colour legend ───────────── */
           const legend = d3.select('#legend');
           years.forEach((yr) => {
-            const item = legend.append('div').attr('class', 'legend-item');
+            const item = legend
+              .append('div')
+              .attr('class', 'legend-item');
             item
               .append('div')
               .attr('class', 'legend-color')
@@ -280,7 +338,10 @@
           });
         })
         .catch((err) =>
-          console.error('Error loading or processing data:', err)
+          console.error(
+            'Error loading or processing data:',
+            err,
+          ),
         );
     </script>
   </body>
