@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>SF Community-wide GHG – Time Series</title>
+    <title>SF Community-wide Green House Gas – Time Series</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://d3js.org/colorbrewer.v1.min.js"></script>
     <style>
@@ -51,7 +51,7 @@
         .attr('y', -10)
         .attr('text-anchor', 'middle')
         .style('font-size', '18px')
-        .text('SF Community-wide GHG by Sector');
+        .text('SF Community-wide Green House Gas by Sector');
 
       d3.csv(csvFile, d3.autoType).then((raw) => {
         // group emissions by sector & year
