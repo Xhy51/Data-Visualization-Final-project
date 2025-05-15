@@ -5,16 +5,20 @@
     <title>
       Green Impact SF – Tree Canopy by Supervisor District
     </title>
+
+    <!-- Basic styling for page, map, and tooltip -->
     <style>
       body {
         font-family: sans-serif;
         margin: 0;
         padding: 20px;
       }
+      /* Outline around each district */
       .district {
         stroke: #fff;
         stroke-width: 0.7;
       }
+      /* Tooltip appearance */
       .tooltip {
         position: absolute;
         background: #fff;
@@ -26,6 +30,7 @@
         box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
       }
     </style>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
 
@@ -34,42 +39,53 @@
     <svg width="800" height="600"></svg>
 
     <script>
+      /* ------------- Grab SVG and its dimensions ------------- */
       const svg = d3.select('svg');
       const { width, height } = svg
         .node()
         .getBoundingClientRect();
 
+      /* ------------- Map projection – centred on SF ------------- */
       const projection = d3
         .geoMercator()
-        .center([-122.4337, 37.7677])
-        .scale(100000)
+        .center([-122.4337, 37.7677]) // roughly city centre
+        .scale(100000) // zoom level
         .translate([width / 2, height / 2]);
 
       const path = d3.geoPath().projection(projection);
+
+      /* Sequential green colour scale (0 % → 25 %) */
       const color = d3
         .scaleSequential(d3.interpolateGreens)
         .domain([0, 25]);
 
+      /* Tooltip container (hidden by default) */
       const tooltip = d3
         .select('body')
         .append('div')
         .attr('class', 'tooltip')
         .style('opacity', 0);
 
+      /* ------------- Data sources ------------- */
       const geoURL =
         'https://raw.githubusercontent.com/Xhy51/Data-Visualization-Final-project/refs/heads/main/SF_Supervisor_Districts_clean.geojson';
-      const csvURL = 'sf_district_greenrate_2025.csv'; // keep as-is
+      const csvURL = 'sf_district_greenrate_2025.csv'; // district → canopy pct
 
+      /* Load CSV + GeoJSON in parallel */
       Promise.all([d3.csv(csvURL), d3.json(geoURL)]).then(
         ([csv, geo]) => {
+          /* Map district number → tree-canopy rate */
           const rate = new Map(
             csv.map((d) => [+d.District, +d.GreenRate_pct]),
           );
+
+          /* Update colour scale domain to match data max */
           color.domain([
             0,
             d3.max(csv, (d) => +d.GreenRate_pct),
           ]);
 
+          /* ------------- Draw the districts ------------- */
           svg
             .selectAll('.district')
             .data(geo.features)
@@ -80,6 +96,7 @@
             .attr('fill', (d) =>
               color(rate.get(+d.properties.District) ?? 0),
             )
+            /* Tooltip interactivity */
             .on('mouseover', (e, d) => {
               const id = +d.properties.District;
               const v = rate.get(id);
@@ -106,13 +123,15 @@
                 .style('opacity', 0),
             );
 
-          // legend
+          /* ------------- Gradient Legend (vertical) ------------- */
           const g = svg
             .append('g')
             .attr(
               'transform',
               `translate(${width - 140},${height - 220})`,
             );
+
+          /* Position scale for legend (0–150 px height) */
           const scale = d3
             .scaleLinear()
             .domain(color.domain())
@@ -122,6 +141,7 @@
             .ticks(5)
             .tickFormat((d) => d + '%');
 
+          /* Define gradient definition */
           const defs = svg.append('defs');
           const grad = defs
             .append('linearGradient')
@@ -130,6 +150,8 @@
             .attr('y1', '0%')
             .attr('x2', '0%')
             .attr('y2', '100%');
+
+          /* Add gradient stops (0 → 1 in 1 % steps) */
           grad
             .selectAll('stop')
             .data(d3.range(0, 1.01, 0.01))
@@ -140,10 +162,13 @@
               color(scale.invert(d * 150)),
             );
 
+          /* Gradient bar */
           g.append('rect')
             .attr('width', 15)
             .attr('height', 150)
             .style('fill', 'url(#lg)');
+
+          /* Tick labels */
           g.append('g')
             .attr('transform', 'translate(15,0)')
             .call(axis)
@@ -153,4 +178,4 @@
       );
     </script>
   </body>
-</html
+</html>
